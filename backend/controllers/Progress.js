@@ -25,10 +25,11 @@ exports.selectCourse = async (req, res) => {
                 message: "Course selected successfully, and progress initialized."
             });
         } else {
-            // User has already selected the course; do not increase enrollment again
-            res.status(409).json({
-                success: false,
-                message: "User has already selected this course."
+            // User has already selected the course
+            res.status(200).json({
+                success: true,
+                message: "User already enrolled in this course.",
+                newUser: false 
             });
         }
     } catch (error) {
@@ -40,3 +41,12 @@ exports.selectCourse = async (req, res) => {
     }
 };
 
+exports.getCourses = async (req, res) => {
+    try {
+        const [courses] = await pool.execute('SELECT * FROM course');
+        res.json(courses);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Failed to fetch courses" });
+    }
+};

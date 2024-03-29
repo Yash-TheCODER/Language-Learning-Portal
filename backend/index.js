@@ -1,4 +1,4 @@
-// creating serve
+// creating server
 const express = require('express');
 const app = express();
 const mysql2 = require('mysql2');

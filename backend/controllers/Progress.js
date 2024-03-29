@@ -50,3 +50,20 @@ exports.getCourses = async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to fetch courses" });
     }
 };
+
+
+exports.getCourseById = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const [courseDetails] = await pool.execute('SELECT * FROM course WHERE COURSE_ID = ?', [courseId]);
+        
+        if (courseDetails.length > 0) {
+            res.json(courseDetails[0]);
+        } else {
+            res.status(404).json({ success: false, message: "Course not found" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Failed to fetch course details" });
+    }
+};

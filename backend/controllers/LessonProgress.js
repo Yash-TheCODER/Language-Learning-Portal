@@ -9,10 +9,11 @@ exports.getSectionsByCourseId = async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to fetch sections" });
     }
 };
+
 exports.getLessonsBySectionId = async (req, res) => {
     try {
-        const { sectionId } = req.params;
-        const [lessons] = await pool.execute('SELECT * FROM lesson WHERE SECTION_ID = ?', [sectionId]);
+        const { sectionId, courseId } = req.params;
+        const [lessons] = await pool.execute('SELECT * FROM lesson WHERE SECTION_ID = ? AND COURSE_ID = ?', [sectionId, courseId]);
 
         res.json(lessons);
     } catch (error) {
@@ -20,6 +21,7 @@ exports.getLessonsBySectionId = async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to fetch lessons" });
     }
 };
+
 async function getCourseIdForLesson(lessonId) {
     try {
         const [rows] = await pool.execute('SELECT SECTION_ID FROM lesson WHERE LESSON_ID = ?', [lessonId]);
@@ -37,52 +39,22 @@ async function getCourseIdForLesson(lessonId) {
     }
 }
 
-// exports.markLessonComplete = async (req, res) => {
-//     const {lessonId} = req.body;
-//     const USER_ID = req.user.id; 
-//     try {
-//         const courseId = await getCourseIdForLesson(lessonId);
-
-//         const cntquery = `SELECT COUNT(*) AS count FROM  lesson_status WHERE LESSON_ID = ? AND USER_ID = ? AND STATUS = 'completed'`;
-//         const [[{ cnt }]] = await pool.execute(countQuery, [lessonId, USER_ID]);
-//         console.log(cnt);
-//         if(cnt == 0)
-//         {
-//             const insertLessonStatusQuery = `INSERT INTO lesson_status (USER_ID, LESSON_ID, STATUS) VALUES (?, ?, 'completed')
-//             ON DUPLICATE KEY UPDATE STATUS ='completed'`;
-//             await pool.execute(insertLessonStatusQuery, [lessonId,USER_ID]);
-
-//             const updateProgressQuery = `UPDATE progress SET LESSONS_DONE = LESSONS_DONE + 1, EXP_GAIN = EXP_GAIN + 5
-//             WHERE USER_ID = ? AND COURSE_ID = ?`;
-//             await pool.execute(updateProgressQuery, [USER_ID, courseId]);
-//             res.json({ success: true, message: "Lesson marked as complete and progress updated." });
-//         }
-//         else {
-//             // Lesson already completed-->>> donot update progress
-//             res.json({ success: true, message: "Lesson is already completed." });
-//         }        
-//     } catch (error) {
-//         console.error('Failed to mark lesson as complete:', error);
-//         res.status(500).json({ success: false, message: "Failed to mark lesson as complete and update progress" });
-//     }
-// };
-
-
-
 
 exports.markLessonComplete = async (req, res) => {
-    const { lessonId } = req.body;
+    const { lessonId, courseId, sectionId } = req.body;
     const USER_ID = req.user.id;
     try {
         const courseId = await getCourseIdForLesson(lessonId);
-
-        
-        const countQuery = `SELECT COUNT(*) AS count FROM lesson_status WHERE LESSON_ID = ? AND USER_ID = ? AND STATUS = 'completed'`;
-        const [[{ count }]] = await pool.execute(countQuery, [lessonId, USER_ID]); 
+        const countQuery = `SELECT COUNT(*) AS count FROM lesson_status WHERE LESSON_ID = ? AND USER_ID = ? AND COURSE_ID = ? AND SECTION_ID = ? AND STATUS = 'completed'`;
+        const [[{ count }]] = await pool.execute(countQuery, [lessonId, USER_ID, courseId, sectionId]); 
         
         if(count == 0) {
-            const insertLessonStatusQuery = `INSERT INTO lesson_status (USER_ID, LESSON_ID, STATUS) VALUES (?, ?, 'completed') ON DUPLICATE KEY UPDATE STATUS = 'completed'`;
-            await pool.execute(insertLessonStatusQuery, [USER_ID, lessonId]);
+
+            const insertUserExpQuery = `UPDATE USER SET USER_EXP = USER_EXP + 5 WHERE USER_ID = ${USER_ID}`;
+            await pool.execute(insertUserExpQuery,[USER_ID]);
+
+            const insertLessonStatusQuery = `INSERT INTO lesson_status (USER_ID,COURSE_ID, SECTION_ID, LESSON_ID, STATUS) VALUES (?, ?,?,?, 'completed') ON DUPLICATE KEY UPDATE STATUS = 'completed'`;
+            await pool.execute(insertLessonStatusQuery, [USER_ID,courseId,sectionId, lessonId]);
 
             const updateProgressQuery = `UPDATE progress SET LESSONS_DONE = LESSONS_DONE + 1, EXP_GAIN = EXP_GAIN + 5 WHERE USER_ID = ? AND COURSE_ID = ?`;
             await pool.execute(updateProgressQuery, [USER_ID, courseId]);

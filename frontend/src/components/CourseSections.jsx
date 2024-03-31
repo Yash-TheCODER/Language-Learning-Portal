@@ -32,7 +32,7 @@ const CourseSections = ({ courseId }) => {
             {sections.map(section => (
                 <div key={section.SECTION_ID}>
                     <h2 className='text-red-500'>{section.SECTION_NAME}</h2>
-                    <CourseContent sectionId={section.SECTION_ID} />
+                    <CourseContent sectionId={section.SECTION_ID}  courseId={courseId}/>
                 </div>
             ))}
         </div>

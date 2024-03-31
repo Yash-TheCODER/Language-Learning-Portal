@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-const CourseContent = ({ sectionId }) => {
+const CourseContent = ({ sectionId,courseId }) => {
     const [lessons, setLessons] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
-
+    // console.log(courseId)
     useEffect(() => {
         setIsLoading(true);
-        fetch(`/api/v1/section/${sectionId}/lessons`)
+        fetch(`/api/v1/course/${courseId}/section/${sectionId}/lessons`)
             .then(response => {
                 if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();
@@ -20,20 +20,20 @@ const CourseContent = ({ sectionId }) => {
                 setError(error.toString());
                 setIsLoading(false);
             });
-    }, [sectionId]);
+    }, [sectionId, courseId]);
 
-    const completeLesson = (lessonId) => {
+    const completeLesson = (lessonId,courseId,sectionId) => {
         console.log(localStorage)
-        const userId = localStorage.getItem('userId'); 
-        console.log(userId)
-        if (!userId) {
-            console.error('User ID not found');
-            return;
-        }
+        // const userId = localStorage.getItem('userId'); 
+        // console.log(userId)
+        // if (!userId) {
+        //     console.error('User ID not found');
+        //     return;
+        // }
         fetch('/api/v1/lesson/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, lessonId }),
+            body: JSON.stringify({ lessonId,courseId,sectionId }),
         })
         .then(response => {
             if (!response.ok) throw new Error('Failed to mark lesson as complete');
@@ -62,7 +62,7 @@ const CourseContent = ({ sectionId }) => {
             {lessons.map(lesson => (
                 <div key={lesson.LESSON_ID}>
                     <p>{lesson.LESSON_NAME}</p>
-                    <button onClick={() => completeLesson(lesson.LESSON_ID)} disabled={lesson.completed}>
+                    <button onClick={() => completeLesson(lesson.LESSON_ID,courseId,sectionId)} disabled={lesson.completed}>
                         {lesson.completed ? 'Completed' : 'Complete Lesson'}
                     </button>
                 </div>

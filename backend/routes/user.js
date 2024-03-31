@@ -19,7 +19,7 @@ router.get("/course/:courseId", getCourseById);
 
 
 router.get("/course/:courseId/sections", auth, getSectionsByCourseId);
-router.get("/section/:sectionId/lessons", auth, getLessonsBySectionId);
+router.get("/course/:courseId/section/:sectionId/lessons", auth, getLessonsBySectionId);
 router.post("/lesson/complete", auth, markLessonComplete);
 
 module.exports = router;

@@ -26,9 +26,10 @@ const Home = () => {
                 },
                 body: JSON.stringify({ COURSE_ID: courseId }),
             });
+            console.log(courseId)
             const data = await response.json();
             if (response.ok) {
-                // Whether new or existing enrollment, navigate to the course page
+                // Whether new or existing enrollment navigate to the course page 
                 console.log(data.message); // Log success or info message
                 navigate(`/course/${courseId}`);
             } else {

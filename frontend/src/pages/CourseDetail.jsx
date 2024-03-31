@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import CourseSections from '../components/CourseSections';
+
 import { useParams } from 'react-router-dom';
 
 const CourseDetail = () => {
@@ -23,6 +25,7 @@ const CourseDetail = () => {
         <div>
             <h1>{course.COURSE_NAME}</h1>
             <p>{course.COURSE_DETAILS}</p>
+            <CourseSections courseId={courseId} />
         </div>
     );
 };

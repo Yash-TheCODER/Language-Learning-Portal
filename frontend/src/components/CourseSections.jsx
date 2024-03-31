@@ -1,4 +1,4 @@
-// CourseSections.js
+
 import React, { useState, useEffect } from 'react';
 import CourseContent from './CourseContent'; 
 

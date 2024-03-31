@@ -37,27 +37,59 @@ async function getCourseIdForLesson(lessonId) {
     }
 }
 
+// exports.markLessonComplete = async (req, res) => {
+//     const {lessonId} = req.body;
+//     const USER_ID = req.user.id; 
+//     try {
+//         const courseId = await getCourseIdForLesson(lessonId);
+
+//         const cntquery = `SELECT COUNT(*) AS count FROM  lesson_status WHERE LESSON_ID = ? AND USER_ID = ? AND STATUS = 'completed'`;
+//         const [[{ cnt }]] = await pool.execute(countQuery, [lessonId, USER_ID]);
+//         console.log(cnt);
+//         if(cnt == 0)
+//         {
+//             const insertLessonStatusQuery = `INSERT INTO lesson_status (USER_ID, LESSON_ID, STATUS) VALUES (?, ?, 'completed')
+//             ON DUPLICATE KEY UPDATE STATUS ='completed'`;
+//             await pool.execute(insertLessonStatusQuery, [lessonId,USER_ID]);
+
+//             const updateProgressQuery = `UPDATE progress SET LESSONS_DONE = LESSONS_DONE + 1, EXP_GAIN = EXP_GAIN + 5
+//             WHERE USER_ID = ? AND COURSE_ID = ?`;
+//             await pool.execute(updateProgressQuery, [USER_ID, courseId]);
+//             res.json({ success: true, message: "Lesson marked as complete and progress updated." });
+//         }
+//         else {
+//             // Lesson already completed-->>> donot update progress
+//             res.json({ success: true, message: "Lesson is already completed." });
+//         }        
+//     } catch (error) {
+//         console.error('Failed to mark lesson as complete:', error);
+//         res.status(500).json({ success: false, message: "Failed to mark lesson as complete and update progress" });
+//     }
+// };
+
+
+
+
 exports.markLessonComplete = async (req, res) => {
-    const {lessonId} = req.body;
-    const USER_ID = req.user.id; 
+    const { lessonId } = req.body;
+    const USER_ID = req.user.id;
     try {
         const courseId = await getCourseIdForLesson(lessonId);
 
-        const cntquery = `SELECT COUNT(*) AS count FROM  lesson_status WHERE LESSON_ID = ? AND USER_ID = ? AND STATUS = 'completed'`;
-        const [[{ cnt }]] = await pool.execute(cntquery, [USER_ID, lessonId]);
-        if(cnt == 0)
-        {
-            const insertLessonStatusQuery = `INSERT INTO lesson_status (USER_ID, LESSON_ID, STATUS) VALUES (?, ?, 'completed')
-            ON DUPLICATE KEY UPDATE STATUS ='completed'`;
+        
+        const countQuery = `SELECT COUNT(*) AS count FROM lesson_status WHERE LESSON_ID = ? AND USER_ID = ? AND STATUS = 'completed'`;
+        const [[{ count }]] = await pool.execute(countQuery, [lessonId, USER_ID]); 
+        
+        if(count == 0) {
+            const insertLessonStatusQuery = `INSERT INTO lesson_status (USER_ID, LESSON_ID, STATUS) VALUES (?, ?, 'completed') ON DUPLICATE KEY UPDATE STATUS = 'completed'`;
             await pool.execute(insertLessonStatusQuery, [USER_ID, lessonId]);
 
-            const updateProgressQuery = `UPDATE progress SET LESSONS_DONE = LESSONS_DONE + 1, EXP_GAIN = EXP_GAIN + 5
-            WHERE USER_ID = ? AND COURSE_ID = ?`;
+            const updateProgressQuery = `UPDATE progress SET LESSONS_DONE = LESSONS_DONE + 1, EXP_GAIN = EXP_GAIN + 5 WHERE USER_ID = ? AND COURSE_ID = ?`;
             await pool.execute(updateProgressQuery, [USER_ID, courseId]);
+
             res.json({ success: true, message: "Lesson marked as complete and progress updated." });
-        }
-        else {
-            // Lesson already completed-->>> donot update progress
+        } else {
+            // Lesson already completed -> do not update progress
             res.json({ success: true, message: "Lesson is already completed." });
         }        
     } catch (error) {
@@ -65,7 +97,3 @@ exports.markLessonComplete = async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to mark lesson as complete and update progress" });
     }
 };
-
-
-
-
